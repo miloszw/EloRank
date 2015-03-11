@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/miloszw/EloRankServer/issues"
   },
-  "homepage": "https://github.com/miloszw/EloRankServer"
+  "homepage": "https://github.com/miloszw/EloRankServer",
+  "dependencies": {
+    "express": "^4.12.2",
+    "node-mysql": "^0.4.2"
+  }
 }
