@@ -1,0 +1,19 @@
+{
+  "name": "EloRankServer",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/miloszw/EloRankServer.git"
+  },
+  "author": "Milosz Wielondek",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/miloszw/EloRankServer/issues"
+  },
+  "homepage": "https://github.com/miloszw/EloRankServer"
+}
