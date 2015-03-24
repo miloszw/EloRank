@@ -1,17 +1,19 @@
 var express = require('express');
-
 var app = express();
 
+// serve static files
 app.use(express.static('./public'));
 
-app.listen(8080);
-console.log("Listening on 8080...");
-
+// create db connection
 var connection = require('./db');
 connection.connect();
 console.log("Established connection to database.");
 
+// start listening
+app.listen(8080);
+console.log("Listening on 8080...");
 
+// routes
 app.get('/polls', function(req, res) {
     connection.query('SELECT * FROM polls', function(err, rows, fields) {
       if (err) throw err;
@@ -25,6 +27,6 @@ app.get('/polls', function(req, res) {
 // on ctrl-c
 process.on('SIGINT', function() {
     connection.end();
-    console.log("Exiting...");
+    console.log("\nExiting...");
     process.exit();
 });
