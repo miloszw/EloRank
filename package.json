@@ -18,6 +18,8 @@
   "homepage": "https://github.com/miloszw/EloRankServer",
   "dependencies": {
     "express": "^4.12.2",
-    "mysql": "^2.5.5"
+    "mysql": "^2.5.5",
+    "rsvp": "^3.0.17",
+    "underscore": "^1.8.2"
   }
 }

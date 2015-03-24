@@ -1,3 +1,5 @@
+var RSVP = require('rsvp');
+var _ = require('underscore');
 var express = require('express');
 var app = express();
 
@@ -14,13 +16,37 @@ app.listen(8080);
 console.log("Listening on 8080...");
 
 // routes
-app.get('/polls', function(req, res) {
-    connection.query('SELECT * FROM polls', function(err, rows, fields) {
+app.get('/polls/:id(\\d+)?', function(req, res) {
+    if (!req.params.id) {
+        var sql = 'SELECT * FROM polls';
+    } else {
+        var sql = 'SELECT * FROM polls WHERE id=' + req.params.id;
+    }
+
+    connection.query(sql, function(err, rows, fields) {
       if (err) throw err;
 
-      res.send(rows);
-      res.end();
-  });
+      // get alternatives for each poll
+        var promises = _.range(0,rows.length)
+        .map(function(i) {
+            return new RSVP.Promise(function(resolve, reject) {
+                connection.query('SELECT * FROM alternatives WHERE polls_id=?',
+                    rows[i].id, function(err, rowsAlt, fields) {
+                        if (err) throw err;
+                        rows[i].alternatives = rowsAlt;
+                        console.log("Added alts to row id" + i);
+                        resolve();
+                    });    
+            })
+        });
+
+        RSVP.all(promises).then(function() {
+          console.log("Sent response!");
+          res.send(rows);
+          res.end();
+        });
+    });
+
 });
 
 
