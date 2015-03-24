@@ -19,6 +19,7 @@ app.get('/polls', function(req, res) {
       if (err) throw err;
 
       res.send(rows);
+      res.end();
   });
 });
 
