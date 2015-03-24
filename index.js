@@ -49,6 +49,27 @@ app.get('/polls/:id(\\d+)?', function(req, res) {
 
 });
 
+app.get('/polls/:id(\\d+)/challenge', function(req, res) {
+  connection.query('SELECT id FROM alternatives WHERE polls_id=?' +
+  ' ORDER BY ranked_times DESC LIMIT 2', req.params.id,
+  function(err, rows, fields) {
+    if (err) throw err;
+
+    // create challenge
+    connection.query('INSERT INTO challenges(poll_id, alt1_id, alt2_id) ' +
+    'VALUES (?, ?, ?)', [req.params.id, rows[0].id, rows[1].id],
+    function(err, rowsAlt, fields) {
+      if (err) throw err;
+      // send response containing alternative ids
+      res.status(200).json({
+        alt1: rows[0].id,
+        alt2: rows[1].id
+      });
+    });
+
+  });
+});
+
 
 
 // on ctrl-c
