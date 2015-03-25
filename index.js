@@ -1,7 +1,12 @@
-var RSVP = require('rsvp');
-var _ = require('underscore');
-var express = require('express');
-var app = express();
+// web modules
+var jsonParser  = require('body-parser').json();
+var express     = require('express');
+var app         = express();
+
+// other modules
+var RSVP  = require('rsvp');
+var _     = require('underscore');
+var elo   = require('./elo');
 
 // serve static files
 app.use(express.static('./public'));
@@ -34,14 +39,12 @@ app.get('/polls/:id(\\d+)?', function(req, res) {
         rows[i].id, function(err, rowsAlt, fields) {
           if (err) throw err;
           rows[i].alternatives = rowsAlt;
-          console.log("Added alts to row id" + i);
           resolve();
         });
       })
     });
 
     RSVP.all(promises).then(function() {
-      console.log("Sent response!");
       res.send(rows);
       res.end();
     });
@@ -61,14 +64,80 @@ app.get('/polls/:id(\\d+)/challenge', function(req, res) {
     function(err, rowsAlt, fields) {
       if (err) throw err;
       // send response containing alternative ids
-      res.status(200).json({
+      res.status(201).json({
         alt1: rows[0].id,
         alt2: rows[1].id
       });
+      res.end();
     });
 
   });
 });
+
+
+app.post('/polls/:id(\\d+)/challenge', jsonParser, function(req, res) {
+  connection.query('SELECT * FROM challenges WHERE id=?',
+  req.body.id, function(err, rows, fields) {
+    if (err) throw err;
+
+    // get alternative
+    connection.query('SELECT * FROM alternatives WHERE id=? or ?',
+    [rows[0].alt1_id, rows[0].alt2_id], function(err, rowsAlt, fields) {
+      if (err) throw err;
+
+      altProps = [{
+        "id": rowsAlt[0].id,
+        "score": rowsAlt[0].score,
+        "ranked_times" :rowsAlt[0].ranked_times
+      },{
+        "id": rowsAlt[1].id,
+        "score": rowsAlt[1].score,
+        "ranked_times" :rowsAlt[1].ranked_times
+      }];
+
+      // update alternative's scores
+      updateAlternatives(req.body.result, altProps, function() {
+        // delete challenge
+        connection.query('DELETE FROM challenges WHERE id=?',
+        req.body.id, function(err, rowsAlt, fields) {
+          if (err) throw err;
+          res.status(200).send("Results were successfully recorded!");
+          res.end();
+        });
+      });
+    });
+  });
+});
+
+var updateAlternatives = function(result, altProps, callback) {
+  var alt1Score = altProps[0].score;
+  var alt2Score = altProps[1].score;
+  var newScore  = elo.calcScore(result, alt1Score, alt2Score);
+
+  var set = [{
+    "id": altProps[0].id,
+    "score": newScore[0],
+    "ranked_times": ++altProps[0].ranked_times
+  }, {
+    "id": altProps[1].id,
+    "score": newScore[1],
+    "ranked_times": ++altProps[1].ranked_times
+  }];
+
+  var promises = [0,1].map(function(i) {
+    return new RSVP.Promise(function(resolve, reject) {
+      connection.query('UPDATE alternatives SET ? WHERE id=?', [set[i], set[i].id],
+      function(err, rows, fields) {
+        if (err) throw err;
+        resolve();
+      });
+    })
+  });
+
+  RSVP.all(promises).then(function() {
+    callback();
+  });
+}
 
 
 

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/miloszw/EloRankServer",
   "dependencies": {
+    "body-parser": "^1.12.2",
     "express": "^4.12.2",
     "mysql": "^2.5.5",
     "rsvp": "^3.0.17",
