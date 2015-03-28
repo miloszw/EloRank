@@ -26,35 +26,48 @@ console.log("Listening on 8080...");
 // routes
 app.get('/polls/:id(\\d+)?', function(req, res) {
   if (!req.params.id) {
+    // get all polls
     var sql = 'SELECT * FROM polls';
+    connection.query(sql, function(err, rows, fields) {
+      if (err) throw err;
+
+      // get alternatives count for each poll
+      var promises = _.range(0,rows.length)
+      .map(function(i) {
+        return new RSVP.Promise(function(resolve, reject) {
+          connection.query('SELECT count(id) AS count FROM alternatives WHERE polls_id=?',
+          rows[i].id, function(err, rowsAlt, fields) {
+            if (err) throw err;
+            rows[i].alternativesCount = rowsAlt[0]["count"];
+            resolve();
+          });
+        })
+      });
+
+      RSVP.all(promises).then(function() {
+        setTimeout(function() {
+          res.send(rows);
+          res.end();
+        }, TIMEOUT);
+      });
+    });
   } else {
+    // get specific poll
     var sql = 'SELECT * FROM polls WHERE id=' + req.params.id;
-  }
+    connection.query(sql, function(err, rows, fields) {
+      if (err) throw err;
 
-  connection.query(sql, function(err, rows, fields) {
-    if (err) throw err;
-
-    // get alternatives for each poll
-    var promises = _.range(0,rows.length)
-    .map(function(i) {
-      return new RSVP.Promise(function(resolve, reject) {
-        connection.query('SELECT * FROM alternatives WHERE polls_id=?',
-        rows[i].id, function(err, rowsAlt, fields) {
-          if (err) throw err;
-          rows[i].alternatives = rowsAlt;
-          resolve();
-        });
+      connection.query('SELECT * FROM alternatives WHERE polls_id=?',
+      rows[0].id, function(err, rowsAlt, fields) {
+        if (err) throw err;
+        rows[0].alternatives = rowsAlt;
+        setTimeout(function() {
+          res.send(rows);
+          res.end();
+        }, TIMEOUT);
       })
-    });
-
-    RSVP.all(promises).then(function() {
-      setTimeout(function() {
-        res.send(rows);
-        res.end();
-      }, TIMEOUT);
-    });
-  });
-
+    })
+  }
 });
 
 app.get('/polls/:id(\\d+)/challenge', function(req, res) {
