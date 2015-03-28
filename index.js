@@ -1,3 +1,6 @@
+// timeout in ms to simulate delay (debug)
+TIMEOUT = 0
+
 // web modules
 var jsonParser  = require('body-parser').json();
 var express     = require('express');
@@ -45,8 +48,10 @@ app.get('/polls/:id(\\d+)?', function(req, res) {
     });
 
     RSVP.all(promises).then(function() {
-      res.send(rows);
-      res.end();
+      setTimeout(function() {
+        res.send(rows);
+        res.end();
+      }, TIMEOUT);
     });
   });
 
