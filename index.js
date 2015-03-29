@@ -93,7 +93,7 @@ app.get('/polls/:id(\\d+)/challenge', function(req, res) {
 });
 
 
-app.post('/polls/:id(\\d+)/challenge', jsonParser, function(req, res) {
+app.post('/polls/challenge/:id(\\d+)', jsonParser, function(req, res) {
   connection.query('SELECT * FROM challenges WHERE id=?',
   req.body.id, function(err, rows, fields) {
     if (err) throw err;
