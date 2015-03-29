@@ -1,5 +1,5 @@
 // timeout in ms to simulate delay (debug)
-TIMEOUT = 1000
+TIMEOUT = 0
 
 // web modules
 var jsonParser  = require('body-parser').json();
@@ -85,6 +85,10 @@ app.get('/polls/:id(\\d+)/challenge', function(req, res) {
       return random[rows.indexOf(a)] - random[rows.indexOf(b)];
     });
 
+    // now pick two alternatives and sort them by id
+    rows = rows.slice(0,2);
+    rows.sort(function(a,b) { return +a.id - +b.id });
+
     // create challenge
     connection.query('INSERT INTO challenges(poll_id, alt1_id, alt2_id) ' +
     'VALUES (?, ?, ?)', [req.params.id, rows[0].id, rows[1].id],
@@ -109,8 +113,9 @@ app.post('/polls/challenge/:id(\\d+)', jsonParser, function(req, res) {
     if (err) throw err;
 
     // get alternative
-    connection.query('SELECT * FROM alternatives WHERE id=? or id=?',
-    [rows[0].alt1_id, rows[0].alt2_id], function(err, rowsAlt, fields) {
+    connection.query('SELECT * FROM alternatives WHERE id=? or id=?' +
+    ' ORDER BY id ASC', [rows[0].alt1_id, rows[0].alt2_id],
+    function(err, rowsAlt, fields) {
       if (err) throw err;
 
       altProps = [{
@@ -124,7 +129,7 @@ app.post('/polls/challenge/:id(\\d+)', jsonParser, function(req, res) {
       }];
 
       // update alternative's scores
-      updateAlternatives(req.body.result, altProps, function() {
+      updateAlternatives(+req.body.result, altProps, function() {
         // delete challenge
         connection.query('DELETE FROM challenges WHERE id=?',
         req.body.id, function(err, rowsAlt, fields) {
@@ -154,8 +159,8 @@ var updateAlternatives = function(result, altProps, callback) {
 
   var promises = [0,1].map(function(i) {
     return new RSVP.Promise(function(resolve, reject) {
-      connection.query('UPDATE alternatives SET ? WHERE id=?', [set[i], set[i].id],
-      function(err, rows, fields) {
+      connection.query('UPDATE alternatives SET ? WHERE id=?',
+      [set[i], set[i].id], function(err, rows, fields) {
         if (err) throw err;
         resolve();
       });
