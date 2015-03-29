@@ -79,10 +79,11 @@ app.get('/polls/:id(\\d+)/challenge', function(req, res) {
     // create challenge
     connection.query('INSERT INTO challenges(poll_id, alt1_id, alt2_id) ' +
     'VALUES (?, ?, ?)', [req.params.id, rows[0].id, rows[1].id],
-    function(err, rowsAlt, fields) {
+    function(err, result, fields) {
       if (err) throw err;
       // send response containing alternative ids
       res.status(201).json({
+        id: result.insertId, // newly created challenge id
         alt1: rows[0].id,
         alt2: rows[1].id
       });
