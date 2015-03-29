@@ -1,5 +1,5 @@
 // timeout in ms to simulate delay (debug)
-TIMEOUT = 0
+TIMEOUT = 1000
 
 // web modules
 var jsonParser  = require('body-parser').json();
@@ -72,9 +72,18 @@ app.get('/polls/:id(\\d+)?', function(req, res) {
 
 app.get('/polls/:id(\\d+)/challenge', function(req, res) {
   connection.query('SELECT id FROM alternatives WHERE polls_id=?' +
-  ' ORDER BY ranked_times ASC LIMIT 2', req.params.id,
+  ' ORDER BY ranked_times ASC LIMIT 5', req.params.id,
   function(err, rows, fields) {
     if (err) throw err;
+
+    // shuffle alternatives for better user experience
+    // (otherwise a lot of the time challenges will include
+    // the same alternatives as previous challenges)
+    // using random sort method - good enough for small arrays
+    var random = rows.map(Math.random);
+    rows.sort(function(a,b) {
+      return random[rows.indexOf(a)] - random[rows.indexOf(b)];
+    });
 
     // create challenge
     connection.query('INSERT INTO challenges(poll_id, alt1_id, alt2_id) ' +
