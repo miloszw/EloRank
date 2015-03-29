@@ -1,5 +1,7 @@
 # Public files
 /public/*
+.DS_Store
+
 # Logs
 logs
 *.log
