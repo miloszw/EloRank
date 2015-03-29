@@ -72,7 +72,7 @@ app.get('/polls/:id(\\d+)?', function(req, res) {
 
 app.get('/polls/:id(\\d+)/challenge', function(req, res) {
   connection.query('SELECT id FROM alternatives WHERE polls_id=?' +
-  ' ORDER BY ranked_times DESC LIMIT 2', req.params.id,
+  ' ORDER BY ranked_times ASC LIMIT 2', req.params.id,
   function(err, rows, fields) {
     if (err) throw err;
 
@@ -100,7 +100,7 @@ app.post('/polls/challenge/:id(\\d+)', jsonParser, function(req, res) {
     if (err) throw err;
 
     // get alternative
-    connection.query('SELECT * FROM alternatives WHERE id=? or ?',
+    connection.query('SELECT * FROM alternatives WHERE id=? or id=?',
     [rows[0].alt1_id, rows[0].alt2_id], function(err, rowsAlt, fields) {
       if (err) throw err;
 
